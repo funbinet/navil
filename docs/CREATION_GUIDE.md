@@ -27,16 +27,22 @@ Edit `.navil-scope.yml` to define:
 
 ## 4. Run Modes
 
-### API + Dashboard
+### Desktop GUI (PyQt6)
 
 ```bash
-uvicorn navil.api.server:app --host 0.0.0.0 --port 8080 --reload
+python -m navil
 ```
 
 ### CLI
 
 ```bash
 navil scan https://target.example --scope .navil-scope.yml
+```
+
+### API Service (optional)
+
+```bash
+uvicorn navil.api.server:app --host 0.0.0.0 --port 8080 --reload
 ```
 
 ### Docker Compose

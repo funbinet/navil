@@ -23,12 +23,12 @@ pip-audit
 
 ## Manual Verification Checklist
 
-1. Dashboard loads and authenticates with API token.
-2. Start a scan and verify live feed updates.
-3. Confirm findings table + chart rendering.
-4. Export HTML/PDF report and inspect evidence.
+1. Launch desktop GUI with `python -m navil`.
+2. Start a scan and verify live status/event updates.
+3. Confirm findings table and severity rendering.
+4. Export JSON/HTML/PDF report from GUI and inspect evidence.
 5. Validate out-of-scope target is blocked.
-6. Validate credentials-driven authenticated crawl path.
+6. Validate CLI mode still works with `navil scan ...`.
 
 ## QA Report (2026-04-07)
 

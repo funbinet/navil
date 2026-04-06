@@ -4,12 +4,9 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 from navil.api.middleware import install_middleware
 from navil.api.routes import brain_router, config_router, findings_router, scans_router, ws_router
@@ -38,9 +35,6 @@ app.include_router(brain_router)
 app.include_router(config_router)
 app.include_router(ws_router)
 
-DASHBOARD_ROOT = Path(__file__).resolve().parent.parent / "dashboard"
-app.mount("/dashboard", StaticFiles(directory=DASHBOARD_ROOT, html=True), name="dashboard")
-
 
 @app.get("/health")
 async def health() -> dict[str, str]:
@@ -48,8 +42,12 @@ async def health() -> dict[str, str]:
 
 
 @app.get("/")
-async def index() -> FileResponse:
-    return FileResponse(DASHBOARD_ROOT / "index.html")
+async def index() -> dict[str, str]:
+    return {
+        "service": "navil-api",
+        "health": "/health",
+        "gui": "launch with `python -m navil` or `navil-gui`",
+    }
 
 
 def run() -> None:

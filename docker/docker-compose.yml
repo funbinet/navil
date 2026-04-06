@@ -33,16 +33,6 @@ services:
       - navil_data:/app/.data
     restart: on-failure
 
-  navil-dashboard:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-    container_name: navil-dashboard
-    command: ["python", "-m", "http.server", "8090", "-d", "navil/dashboard"]
-    ports:
-      - "8090:8090"
-    restart: unless-stopped
-
 volumes:
   navil_data:
   navil_reports:

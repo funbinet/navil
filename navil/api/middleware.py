@@ -26,7 +26,7 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
     ) -> Response:
         path = request.url.path
         open_paths = {"/", "/health", "/docs", "/redoc", "/openapi.json"}
-        if path.startswith("/dashboard") or path in open_paths or path.startswith("/ws/"):
+        if path in open_paths or path.startswith("/ws/"):
             return await call_next(request)
 
         if path.startswith("/api"):

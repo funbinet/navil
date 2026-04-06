@@ -14,7 +14,7 @@ Navil must only be used on systems where you have explicit permission to test.
 - Adaptive plugin prioritization engine (epsilon-greedy RL-style policy)
 - Payload mutation pipeline with corpus + genetic evolution
 - Chain analysis for multi-finding attack paths
-- FastAPI API, WebSocket live feed, and modern dashboard UI
+- Native PyQt6 desktop GUI plus FastAPI API and WebSocket live feed
 - Typer + Rich CLI for terminal-first operations
 - Structured reporting (JSON, HTML, Markdown, PDF)
 - CI/CD workflow, Docker runtime, automated tests
@@ -25,7 +25,7 @@ Navil must only be used on systems where you have explicit permission to test.
 ```mermaid
 flowchart LR
     CLI[CLI] --> Engine[Navil Engine]
-    UI[Dashboard/API] --> Engine
+    UI[Desktop GUI/API] --> Engine
     Engine --> Scope[Scope Enforcer]
     Engine --> Recon[Recon Crawler]
     Engine --> Scan[Plugin Scanner]
@@ -50,27 +50,35 @@ flowchart LR
 cp .navil-scope.example.yml .navil-scope.yml
 ```
 
-3. Start API + dashboard:
+3. Launch desktop GUI:
+
+```bash
+python -m navil
+```
+
+4. Start API service (optional):
 
 ```bash
 uvicorn navil.api.server:app --host 0.0.0.0 --port 8080 --reload
 ```
 
-4. Start a scan with CLI:
+5. Start a scan with CLI:
 
 ```bash
 navil scan https://example.com --scope .navil-scope.yml --plugins headers,cors,info_disclosure
 ```
 
-5. Generate report:
+6. Generate report:
 
 ```bash
 navil report --scan-id <SCAN_ID> --format html
 ```
 
-## Dashboard
+## Desktop GUI
 
-Open `http://localhost:8080` and provide your bearer token (default: `local-dev-token`).
+- Primary GUI entrypoint: `python -m navil`
+- Explicit GUI command: `navil gui` or `navil-gui`
+- Explicit CLI mode from module runner: `python -m navil --cli --help`
 
 ## Testing and QA
 

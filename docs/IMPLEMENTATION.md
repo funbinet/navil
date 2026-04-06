@@ -11,7 +11,7 @@
 - `navil/knowledge`: models + SQLite persistence + vector similarity
 - `navil/api`: FastAPI routes, middleware, WebSocket feeds
 - `navil/cli`: Typer command interface
-- `navil/dashboard`: static web UI
+- `navil/gui`: PyQt6 native desktop UI
 - `navil/reporting`: templated export generation
 
 ## Engine Lifecycle
