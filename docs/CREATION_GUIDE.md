@@ -30,7 +30,7 @@ Edit `.navil-scope.yml` to define:
 ### Desktop GUI (PyQt6)
 
 ```bash
-python -m navil
+python3 -m navil
 ```
 
 ### CLI
@@ -54,7 +54,7 @@ docker compose -f docker/docker-compose.yml up --build
 ## 5. Pretraining the Brain
 
 ```bash
-python scripts/train.py --rounds 200 --model models/brain.json
+python3 scripts/train.py --rounds 200 --model models/brain.json
 ```
 
 ## 6. Generate Reports

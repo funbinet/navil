@@ -44,6 +44,9 @@ flowchart LR
 ./scripts/setup.sh
 ```
 
+The default setup installs packages for your local user with `python3`.
+For an isolated environment, run `./scripts/setup.sh --venv`.
+
 2. Create scope file:
 
 ```bash
@@ -53,7 +56,7 @@ cp .navil-scope.example.yml .navil-scope.yml
 3. Launch desktop GUI:
 
 ```bash
-python -m navil
+python3 -m navil
 ```
 
 4. Start API service (optional):
@@ -76,9 +79,9 @@ navil report --scan-id <SCAN_ID> --format html
 
 ## Desktop GUI
 
-- Primary GUI entrypoint: `python -m navil`
+- Primary GUI entrypoint: `python3 -m navil`
 - Explicit GUI command: `navil gui` or `navil-gui`
-- Explicit CLI mode from module runner: `python -m navil --cli --help`
+- Explicit CLI mode from module runner: `python3 -m navil --cli --help`
 
 ## Testing and QA
 

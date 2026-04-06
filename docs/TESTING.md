@@ -23,7 +23,7 @@ pip-audit
 
 ## Manual Verification Checklist
 
-1. Launch desktop GUI with `python -m navil`.
+1. Launch desktop GUI with `python3 -m navil`.
 2. Start a scan and verify live status/event updates.
 3. Confirm findings table and severity rendering.
 4. Export JSON/HTML/PDF report from GUI and inspect evidence.
