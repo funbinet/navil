@@ -1,0 +1,5 @@
+[
+  "; id",
+  "&& whoami",
+  "| cat /etc/passwd"
+]

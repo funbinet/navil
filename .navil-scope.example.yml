@@ -1,0 +1,30 @@
+version: 1
+project: demo-authorized-assessment
+authorization:
+  mode: direct
+  note: "Authorized testing only. Keep signed approval out-of-band."
+
+targets:
+  - name: staging-web
+    base_url: "https://staging.example.com"
+    allowed_methods: ["GET", "POST"]
+    max_depth: 3
+    rate_limit_rps: 2.0
+    include_paths:
+      - "/"
+      - "/app"
+      - "/api"
+    exclude_paths:
+      - "/logout"
+      - "/admin/delete"
+
+credentials:
+  enabled: true
+  username_env: "NAVIL_TARGET_USERNAME"
+  password_env: "NAVIL_TARGET_PASSWORD"
+
+safety:
+  max_requests: 2500
+  stop_on_high_risk: false
+  require_https: true
+  allowed_ports: [443, 8443]

@@ -1,0 +1,773 @@
+# Navil — Autonomous Self-Learning Bug Hunter
+
+> An AI-powered offensive security platform that scans web applications, learns vulnerability patterns through reinforcement learning, dynamically mutates payloads, and evolves its attack strategies from successful exploits.
+
+## Background & Problem Statement
+
+Traditional bug bounty and security scanning tools are **static and rule-based** — they run the same payloads against the same patterns every time. They don't learn from past findings, they don't adapt to WAF evasion, and they can't chain vulnerabilities into complex attack paths. Navil changes this by introducing a **self-evolving offensive security system** built on reinforcement learning, where every scan makes the system smarter.
+
+> [!IMPORTANT]
+> **Legal & Ethical Disclaimer**: Navil is designed **exclusively for authorized security testing**. It must only be used against systems you have explicit, written permission to test. The system enforces scope boundaries, requires target authorization tokens, and logs all actions for audit compliance. Unauthorized use is illegal and unethical.
+
+---
+
+## Architecture Overview
+
+```mermaid
+graph TB
+    subgraph "🧠 Intelligence Layer"
+        RL[RL Brain<br/>DQN/PPO Agent]
+        KB[Knowledge Base<br/>SQLite + Vector Store]
+        PM[Payload Mutator<br/>Genetic Algorithm]
+    end
+
+    subgraph "🔍 Scanning Layer"
+        RC[Recon Crawler<br/>Playwright + asyncio]
+        VS[Vuln Scanner Engine<br/>Plugin-based detectors]
+        EC[Exploit Chain Builder<br/>Multi-step attack paths]
+    end
+
+    subgraph "📡 Interface Layer"
+        CLI[CLI<br/>Rich + Typer]
+        API[API Server<br/>FastAPI]
+        DASH[Dashboard<br/>HTML/CSS/JS + WebSocket]
+    end
+
+    subgraph "📊 Output Layer"
+        RPT[Report Generator<br/>JSON/HTML/PDF]
+        LOG[Audit Logger<br/>Structured logging]
+    end
+
+    CLI --> API
+    DASH --> API
+    API --> RC
+    API --> VS
+    API --> EC
+    RC --> VS
+    VS --> RL
+    RL --> PM
+    PM --> VS
+    VS --> EC
+    EC --> KB
+    KB --> RL
+    VS --> RPT
+    EC --> RPT
+    API --> LOG
+    VS --> LOG
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Rationale |
+|-------|-----------|-----------|
+| **Language** | Python 3.11+ | Async ecosystem, ML libraries, security tooling |
+| **Browser Automation** | Playwright (async) | JS rendering, network interception, multi-browser |
+| **Web Framework** | FastAPI + Uvicorn | Async-native, WebSocket support, auto-docs |
+| **RL Framework** | Stable-Baselines3 + PyTorch | Production DQN/PPO, battle-tested |
+| **Database** | SQLite (findings) + ChromaDB (vectors) | Zero-config, embedded, portable |
+| **CLI** | Typer + Rich | Beautiful terminal UI, auto-completion |
+| **Dashboard** | Vanilla HTML/CSS/JS + Chart.js | No build step, WebSocket real-time updates |
+| **Reporting** | Jinja2 + WeasyPrint | Templated HTML → PDF |
+| **Task Queue** | asyncio + internal queue | No external dependency for single-node |
+| **Logging** | structlog | Structured JSON logging for audit |
+| **Testing** | pytest + pytest-asyncio | Async test support |
+| **Containerization** | Docker + docker-compose | Reproducible environment |
+| **CI/CD** | GitHub Actions | Automated testing & releases |
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> ### Scope & Authorization Model
+> Navil enforces a strict **scope file** (`.navil-scope.yml`) that defines allowed domains, paths, and methods. The scanner will **refuse to operate** without a valid scope file. Should we also require a cryptographic authorization token signed by the target owner?
+
+> [!WARNING]
+> ### Reinforcement Learning Training
+> The RL agent needs training data. The initial approach uses **offline pre-training** on curated vulnerability datasets (OWASP WebGoat, DVWA patterns) before live scanning. Training on real targets requires careful rate-limiting to avoid causing disruption. Are you comfortable with the RL agent starting with pre-trained weights and fine-tuning during authorized scans?
+
+> [!IMPORTANT]
+> ### Dashboard Deployment
+> The dashboard will be served by FastAPI as static files with WebSocket for real-time updates. This keeps the architecture simple (no separate frontend build). Is this acceptable, or do you prefer a React/Vue frontend?
+
+---
+
+## Proposed Changes
+
+### Project Structure
+
+```
+navil/
+├── navil/                          # Main Python package
+│   ├── __init__.py                 # Package init, version
+│   ├── __main__.py                 # Entry point: python -m navil
+│   ├── config.py                   # Configuration management
+│   ├── constants.py                # Global constants
+│   │
+│   ├── core/                       # Core engine
+│   │   ├── __init__.py
+│   │   ├── engine.py               # Main scan orchestrator
+│   │   ├── scope.py                # Scope enforcement
+│   │   ├── session.py              # Scan session management
+│   │   └── scheduler.py            # Task scheduling
+│   │
+│   ├── recon/                      # Reconnaissance & Crawling
+│   │   ├── __init__.py
+│   │   ├── crawler.py              # Playwright-based crawler
+│   │   ├── spider.py               # Link/form discovery
+│   │   ├── tech_detect.py          # Technology fingerprinting
+│   │   ├── sitemap.py              # Sitemap/robots.txt parser
+│   │   └── auth.py                 # Authentication handler
+│   │
+│   ├── scanner/                    # Vulnerability Scanner
+│   │   ├── __init__.py
+│   │   ├── base.py                 # Base scanner plugin interface
+│   │   ├── passive.py              # Passive analysis (headers, cookies)
+│   │   ├── active.py               # Active injection testing
+│   │   ├── plugins/                # Vulnerability detection plugins
+│   │   │   ├── __init__.py
+│   │   │   ├── xss.py              # Cross-Site Scripting
+│   │   │   ├── sqli.py             # SQL Injection
+│   │   │   ├── ssrf.py             # Server-Side Request Forgery
+│   │   │   ├── idor.py             # Insecure Direct Object Reference
+│   │   │   ├── csrf.py             # Cross-Site Request Forgery
+│   │   │   ├── headers.py          # Security headers analysis
+│   │   │   ├── cors.py             # CORS misconfiguration
+│   │   │   ├── open_redirect.py    # Open redirect
+│   │   │   ├── lfi.py              # Local File Inclusion
+│   │   │   ├── rce.py              # Remote Code Execution
+│   │   │   ├── auth_bypass.py      # Authentication bypass
+│   │   │   └── info_disclosure.py  # Information disclosure
+│   │   └── detector.py             # Universal vulnerability detector
+│   │
+│   ├── brain/                      # Reinforcement Learning
+│   │   ├── __init__.py
+│   │   ├── agent.py                # RL agent (DQN/PPO)
+│   │   ├── environment.py          # Gym environment for scanning
+│   │   ├── reward.py               # Reward function design
+│   │   ├── state.py                # State representation
+│   │   ├── actions.py              # Action space definition
+│   │   ├── memory.py               # Experience replay buffer
+│   │   ├── trainer.py              # Training loop
+│   │   └── pretrained/             # Pre-trained model weights
+│   │       └── .gitkeep
+│   │
+│   ├── mutator/                    # Payload Mutation Engine
+│   │   ├── __init__.py
+│   │   ├── engine.py               # Mutation orchestrator
+│   │   ├── genetic.py              # Genetic algorithm mutations
+│   │   ├── encoder.py              # Encoding/obfuscation strategies
+│   │   ├── corpus.py               # Payload corpus management
+│   │   └── payloads/               # Base payload libraries
+│   │       ├── xss.json
+│   │       ├── sqli.json
+│   │       ├── ssrf.json
+│   │       ├── lfi.json
+│   │       └── rce.json
+│   │
+│   ├── chains/                     # Exploit Chain Builder
+│   │   ├── __init__.py
+│   │   ├── builder.py              # Chain construction
+│   │   ├── graph.py                # Attack graph modeling
+│   │   └── executor.py             # Chain execution engine
+│   │
+│   ├── knowledge/                  # Knowledge Base
+│   │   ├── __init__.py
+│   │   ├── store.py                # SQLite findings store
+│   │   ├── vectors.py              # ChromaDB vector store
+│   │   ├── patterns.py             # Pattern extraction
+│   │   └── models.py               # Data models (Pydantic)
+│   │
+│   ├── api/                        # FastAPI Server
+│   │   ├── __init__.py
+│   │   ├── server.py               # FastAPI app
+│   │   ├── routes/
+│   │   │   ├── __init__.py
+│   │   │   ├── scans.py            # Scan management endpoints
+│   │   │   ├── findings.py         # Findings CRUD
+│   │   │   ├── brain.py            # RL agent status/control
+│   │   │   ├── config.py           # Configuration endpoints
+│   │   │   └── ws.py               # WebSocket real-time feed
+│   │   ├── middleware.py           # Auth, CORS, rate-limiting
+│   │   └── schemas.py              # API request/response schemas
+│   │
+│   ├── dashboard/                  # Web Dashboard (static)
+│   │   ├── index.html              # Main dashboard
+│   │   ├── css/
+│   │   │   └── dashboard.css       # Dashboard styles
+│   │   ├── js/
+│   │   │   ├── app.js              # Main application logic
+│   │   │   ├── charts.js           # Chart.js visualizations
+│   │   │   ├── websocket.js        # Real-time WebSocket client
+│   │   │   └── scanner.js          # Scanner control UI
+│   │   └── assets/
+│   │       └── logo.svg            # Navil logo
+│   │
+│   ├── cli/                        # CLI Interface
+│   │   ├── __init__.py
+│   │   ├── app.py                  # Typer CLI app
+│   │   ├── commands/
+│   │   │   ├── __init__.py
+│   │   │   ├── scan.py             # Scan commands
+│   │   │   ├── report.py           # Report generation
+│   │   │   ├── brain.py            # RL brain management
+│   │   │   ├── config.py           # Config management
+│   │   │   └── scope.py            # Scope management
+│   │   └── display.py              # Rich console output
+│   │
+│   ├── reporting/                  # Report Generation
+│   │   ├── __init__.py
+│   │   ├── generator.py            # Report orchestrator
+│   │   ├── templates/
+│   │   │   ├── html_report.html    # HTML report template
+│   │   │   └── executive.html      # Executive summary template
+│   │   └── exporters.py            # JSON/HTML/PDF exporters
+│   │
+│   └── utils/                      # Utilities
+│       ├── __init__.py
+│       ├── logger.py               # Structured logging setup
+│       ├── crypto.py               # Hashing, encoding utilities
+│       ├── http.py                 # HTTP utility functions
+│       ├── validators.py           # Input validation
+│       └── rate_limiter.py         # Rate limiting
+│
+├── tests/                          # Test suite
+│   ├── __init__.py
+│   ├── conftest.py                 # Pytest fixtures
+│   ├── test_crawler.py
+│   ├── test_scanner.py
+│   ├── test_brain.py
+│   ├── test_mutator.py
+│   ├── test_chains.py
+│   ├── test_api.py
+│   ├── test_cli.py
+│   └── test_knowledge.py
+│
+├── docs/                           # Documentation
+│   ├── README.md                   # Project README
+│   ├── CREATION_GUIDE.md           # Build guide
+│   ├── ARCHITECTURE.md             # Tech stack & architecture
+│   ├── IMPLEMENTATION.md           # Implementation strategy
+│   ├── TESTING.md                  # Testing & detection procedures
+│   ├── RESEARCH.md                 # Research notes
+│   ├── PRODUCT_PLAN.md             # Product roadmap
+│   └── API.md                      # API documentation
+│
+├── scripts/                        # Utility scripts
+│   ├── setup.sh                    # Environment setup
+│   ├── train.py                    # RL training script
+│   └── seed_payloads.py            # Seed payload database
+│
+├── .github/                        # GitHub config
+│   └── workflows/
+│       ├── ci.yml                  # CI pipeline
+│       └── release.yml             # Release pipeline
+│
+├── docker/                         # Docker configuration
+│   ├── Dockerfile                  # Main Dockerfile
+│   └── docker-compose.yml          # Compose for full stack
+│
+├── pyproject.toml                  # Project configuration (PEP 621)
+├── requirements.txt                # Pinned dependencies
+├── requirements-dev.txt            # Dev dependencies
+├── .gitignore                      # Git ignore
+├── .navil-scope.example.yml        # Example scope file
+├── LICENSE                         # MIT License
+└── Makefile                        # Common tasks
+```
+
+---
+
+## Detailed Component Breakdown
+
+### 1. Core Engine (`navil/core/`)
+
+The orchestrator that coordinates all subsystems.
+
+#### [NEW] [engine.py](file:///home/bane/navil/navil/core/engine.py)
+- `NavilEngine` class — the master orchestrator
+- Manages scan lifecycle: `init → crawl → scan → learn → report`
+- Async event loop with task scheduling
+- Scope enforcement at every stage
+- Graceful shutdown and state persistence
+
+#### [NEW] [scope.py](file:///home/bane/navil/navil/core/scope.py)
+- Parses `.navil-scope.yml` defining allowed targets
+- URL matching with wildcard support
+- Method restrictions (GET-only, POST allowed, etc.)
+- Rate-limit enforcement per domain
+- **Hard block** on out-of-scope requests
+
+#### [NEW] [session.py](file:///home/bane/navil/navil/core/session.py)
+- Scan session state management
+- Progress tracking with checkpoints
+- Resume capability for interrupted scans
+- Session serialization to SQLite
+
+#### [NEW] [scheduler.py](file:///home/bane/navil/navil/core/scheduler.py)
+- Priority-based task queue
+- RL agent influences task priority (smart scheduling)
+- Rate-limiting per domain
+- Concurrent scan worker management
+
+---
+
+### 2. Reconnaissance Crawler (`navil/recon/`)
+
+Playwright-based intelligent web crawler that discovers the attack surface.
+
+#### [NEW] [crawler.py](file:///home/bane/navil/navil/recon/crawler.py)
+- Async Playwright browser management
+- Headless Chromium with stealth plugins
+- DOM interaction: clicks, form fills, scroll
+- Network interception for API endpoint discovery
+- Screenshot capture on interesting findings
+- Cookie/session management
+- JavaScript execution context analysis
+
+#### [NEW] [spider.py](file:///home/bane/navil/navil/recon/spider.py)
+- URL queue with deduplication
+- Depth-limited crawling with configurable max depth
+- Form discovery and parameter extraction
+- Hidden input and JavaScript-rendered content handling
+- SPA hash-routing support
+- Link priority scoring (RL-informed)
+
+#### [NEW] [tech_detect.py](file:///home/bane/navil/navil/recon/tech_detect.py)
+- Technology fingerprinting (CMS, frameworks, servers)
+- Wappalyzer-style signature matching
+- Response header analysis
+- JavaScript library detection
+- Version extraction for known CVE correlation
+
+#### [NEW] [auth.py](file:///home/bane/navil/navil/recon/auth.py)
+- Login form detection and auto-fill
+- Cookie-based session persistence
+- OAuth/SAML flow handling
+- Multi-step authentication support
+- Session validity monitoring
+
+---
+
+### 3. Vulnerability Scanner (`navil/scanner/`)
+
+Plugin-based vulnerability detection with 12 built-in detectors.
+
+#### [NEW] [base.py](file:///home/bane/navil/navil/scanner/base.py)
+```python
+class VulnPlugin(ABC):
+    """Abstract base for all vulnerability detection plugins."""
+    name: str
+    severity: Severity  # CRITICAL, HIGH, MEDIUM, LOW, INFO
+    category: str       # OWASP category
+    
+    @abstractmethod
+    async def scan(self, target: Target, context: ScanContext) -> list[Finding]: ...
+    
+    @abstractmethod
+    def get_payloads(self) -> list[Payload]: ...
+    
+    @abstractmethod
+    def verify(self, response: Response, payload: Payload) -> bool: ...
+```
+
+#### [NEW] Plugin Suite (12 plugins)
+Each plugin follows the same interface:
+| Plugin | Techniques | Detection |
+|--------|-----------|-----------|
+| `xss.py` | Reflected, stored, DOM-based XSS | DOM mutation monitoring, script execution detection |
+| `sqli.py` | Error-based, blind, time-based SQLi | Error pattern matching, timing analysis |
+| `ssrf.py` | Internal service probing | DNS callback, response analysis |
+| `idor.py` | ID parameter enumeration | Authorization boundary testing |
+| `csrf.py` | Token absence/weakness | Form analysis, token entropy |
+| `headers.py` | Missing security headers | Header presence/value checks |
+| `cors.py` | Wildcard/null origin CORS | Origin reflection testing |
+| `open_redirect.py` | Parameter-based redirects | Redirect chain analysis |
+| `lfi.py` | Path traversal | File content signatures |
+| `rce.py` | Command injection | Time-based, output-based |
+| `auth_bypass.py` | Forced browsing, role confusion | Access control verification |
+| `info_disclosure.py` | Sensitive data exposure | Regex pattern library |
+
+---
+
+### 4. Reinforcement Learning Brain (`navil/brain/`)
+
+The self-learning core that makes Navil intelligent.
+
+#### [NEW] [environment.py](file:///home/bane/navil/navil/brain/environment.py)
+- Custom Gymnasium environment for web vulnerability scanning
+- **State Space**: Vector encoding of target properties (tech stack, input count, response codes, WAF detected, scan history)
+- **Action Space**: `{choose_plugin, choose_payload_strategy, set_encoding, adjust_rate, chain_previous_finding}`
+- **Reward Function**:
+  - `+10.0` — New unique vulnerability confirmed
+  - `+5.0` — New unique suspicious behavior
+  - `+3.0` — New endpoint discovered
+  - `+1.0` — Successful payload that bypassed WAF
+  - `-0.5` — Duplicate finding
+  - `-1.0` — Target timeout/error caused
+  - `-5.0` — Out-of-scope attempt (hard penalty)
+
+#### [NEW] [agent.py](file:///home/bane/navil/navil/brain/agent.py)
+- Stable-Baselines3 DQN agent with custom network
+- Double DQN with prioritized experience replay
+- Epsilon-greedy exploration with decay
+- Model save/load for transfer learning
+- Online learning during scans (fine-tuning)
+
+#### [NEW] [trainer.py](file:///home/bane/navil/navil/brain/trainer.py)
+- Offline pre-training on curated vulnerability datasets
+- Online training during authorized scans
+- Periodic model checkpointing
+- Training metrics logging (TensorBoard compatible)
+- Curriculum learning: easy targets → hard targets
+
+#### [NEW] [memory.py](file:///home/bane/navil/navil/brain/memory.py)
+- Prioritized experience replay buffer
+- Success pattern extraction
+- Failure analysis for strategy adjustment
+- Cross-target knowledge transfer
+
+---
+
+### 5. Payload Mutation Engine (`navil/mutator/`)
+
+Genetic algorithm-based payload evolution.
+
+#### [NEW] [engine.py](file:///home/bane/navil/navil/mutator/engine.py)
+- Orchestrates mutation strategies
+- Fitness scoring based on WAF bypass success
+- Population management (payload pool)
+
+#### [NEW] [genetic.py](file:///home/bane/navil/navil/mutator/genetic.py)
+- Crossover: combines parts of successful payloads
+- Mutation: random character insertion, encoding changes, case alternation
+- Selection: tournament selection based on fitness
+- Elitism: top payloads always survive
+
+#### [NEW] [encoder.py](file:///home/bane/navil/navil/mutator/encoder.py)
+- 15+ encoding strategies:
+  - URL encoding (single/double/triple)
+  - HTML entity encoding
+  - Unicode normalization
+  - Base64 wrapping
+  - Hex encoding
+  - Case alternation
+  - Null byte injection
+  - Comment insertion (SQL)
+  - Whitespace alternatives
+  - JSFuck/emoji encoding
+- Strategy stacking (multiple encodings)
+- Context-aware encoding selection
+
+#### [NEW] [corpus.py](file:///home/bane/navil/navil/mutator/corpus.py)
+- Manages base payload libraries
+- Dynamic corpus expansion from successful exploits
+- Payload tagging and categorization
+- Import/export for sharing
+
+---
+
+### 6. Exploit Chain Builder (`navil/chains/`)
+
+Constructs multi-step attack paths from individual findings.
+
+#### [NEW] [builder.py](file:///home/bane/navil/navil/chains/builder.py)
+- Identifies chainable vulnerabilities
+- Example chains:
+  - `Open Redirect → SSRF → Internal API Access`
+  - `XSS → Cookie Theft → Session Hijacking`
+  - `IDOR → Data Exfiltration → Privilege Escalation`
+- Generates step-by-step reproduction guides
+
+#### [NEW] [graph.py](file:///home/bane/navil/navil/chains/graph.py)
+- Directed graph of vulnerability relationships
+- Impact scoring for chain severity
+- Visualization export (Mermaid/GraphViz)
+
+---
+
+### 7. Knowledge Base (`navil/knowledge/`)
+
+Persistent storage for findings, patterns, and vector embeddings.
+
+#### [NEW] [store.py](file:///home/bane/navil/navil/knowledge/store.py)
+- SQLite-backed findings storage
+- Schema: `scans`, `findings`, `payloads`, `chains`, `metrics`
+- Full scan history with replay capability
+- Deduplication logic
+
+#### [NEW] [vectors.py](file:///home/bane/navil/navil/knowledge/vectors.py)
+- ChromaDB for semantic similarity search
+- Embeds vulnerability descriptions, payloads, responses
+- "Find similar vulnerabilities" across targets
+- Powers the RL state representation
+
+#### [NEW] [models.py](file:///home/bane/navil/navil/knowledge/models.py)
+```python
+class Finding(BaseModel):
+    id: str
+    scan_id: str
+    plugin: str
+    severity: Severity
+    url: str
+    parameter: str | None
+    payload: str | None
+    evidence: str
+    confidence: float  # 0.0 - 1.0
+    chain_potential: list[str]
+    timestamp: datetime
+    
+class ScanResult(BaseModel):
+    id: str
+    target: str
+    status: ScanStatus
+    findings: list[Finding]
+    metrics: ScanMetrics
+    brain_state: dict  # RL agent state snapshot
+```
+
+---
+
+### 8. API Server (`navil/api/`)
+
+FastAPI server powering both CLI and dashboard.
+
+#### [NEW] [server.py](file:///home/bane/navil/navil/api/server.py)
+- FastAPI with async support
+- WebSocket endpoint for real-time scan updates
+- Static file serving for dashboard
+- OpenAPI auto-documentation
+- JWT-based local authentication
+
+#### Key Endpoints:
+| Method | Endpoint | Description |
+|--------|---------|-------------|
+| `POST` | `/api/scans` | Start a new scan |
+| `GET` | `/api/scans/{id}` | Get scan status |
+| `GET` | `/api/scans/{id}/findings` | Get scan findings |
+| `DELETE` | `/api/scans/{id}` | Cancel a scan |
+| `GET` | `/api/findings` | Query all findings |
+| `GET` | `/api/brain/status` | RL agent status |
+| `POST` | `/api/brain/train` | Trigger training |
+| `GET` | `/api/brain/metrics` | Training metrics |
+| `WS` | `/ws/scan/{id}` | Real-time scan feed |
+
+---
+
+### 9. Dashboard (`navil/dashboard/`)
+
+Stunning dark-mode cybersecurity dashboard with real-time updates.
+
+#### [NEW] [index.html](file:///home/bane/navil/navil/dashboard/index.html)
+- Dark glass-morphism design with neon accents
+- Real-time vulnerability feed via WebSocket
+- Interactive attack surface map
+- RL brain activity visualization
+- Scan control panel
+
+#### [NEW] [dashboard.css](file:///home/bane/navil/navil/dashboard/css/dashboard.css)
+- CSS custom properties for theming
+- Glassmorphism cards with backdrop-filter
+- Neon glow effects (cyan/magenta/lime)
+- Smooth animations for all state changes
+- Responsive grid layout
+- Custom scrollbar styling
+- Pulsing indicators for active scans
+
+#### [NEW] Dashboard JS modules
+- `app.js` — SPA routing, state management
+- `charts.js` — Chart.js: severity distribution, scan progress, RL reward curve
+- `websocket.js` — WebSocket connection with auto-reconnect
+- `scanner.js` — Scan initiation, pause, resume controls
+
+---
+
+### 10. CLI Interface (`navil/cli/`)
+
+Beautiful terminal interface with Rich formatting.
+
+#### [NEW] [app.py](file:///home/bane/navil/navil/cli/app.py)
+```bash
+# Usage examples:
+navil scan https://target.com --depth 3 --plugins xss,sqli
+navil scan --scope ./scope.yml --full
+navil report --scan-id abc123 --format pdf
+navil brain status
+navil brain train --episodes 1000
+navil scope validate ./scope.yml
+```
+
+#### [NEW] [display.py](file:///home/bane/navil/navil/cli/display.py)
+- Rich tables for findings
+- Live progress bars during scan
+- Severity-colored output
+- ASCII art banner
+- Animated spinners for async operations
+
+---
+
+### 11. Report Generator (`navil/reporting/`)
+
+Professional vulnerability reports.
+
+#### [NEW] [generator.py](file:///home/bane/navil/navil/reporting/generator.py)
+- JSON export (machine-readable)
+- HTML report with interactive charts
+- PDF executive summary
+- SARIF format for IDE integration
+- Markdown for quick sharing
+
+---
+
+### 12. DevOps & CI/CD
+
+#### [NEW] [Dockerfile](file:///home/bane/navil/docker/Dockerfile)
+- Multi-stage build: builder → runtime
+- Playwright browsers pre-installed
+- Non-root user
+- Health checks
+
+#### [NEW] [docker-compose.yml](file:///home/bane/navil/docker/docker-compose.yml)
+- Services: `navil-api`, `navil-worker`, `navil-dashboard`
+- Volume mounts for data persistence
+- Network isolation
+
+#### [NEW] [ci.yml](file:///home/bane/navil/.github/workflows/ci.yml)
+- Lint (ruff), type-check (mypy), test (pytest)
+- Coverage gating (>80%)
+- Security scan of own dependencies (pip-audit)
+- Docker image build verification
+
+---
+
+## Feedback Loop Architecture
+
+This is the core innovation — the self-learning cycle:
+
+```mermaid
+flowchart LR
+    A[🔍 Scan Target] --> B[📊 Collect Results]
+    B --> C{Finding?}
+    C -->|Yes| D[✅ Positive Reward]
+    C -->|No| E[❌ Negative Reward]
+    D --> F[🧬 Extract Pattern]
+    E --> G[🔄 Mutate Strategy]
+    F --> H[💾 Knowledge Base]
+    G --> I[🎲 New Payloads]
+    H --> J[🧠 RL Update]
+    I --> J
+    J --> K[📈 Better Policy]
+    K --> A
+
+    style D fill:#10b981,color:#000
+    style E fill:#ef4444,color:#000
+    style J fill:#8b5cf6,color:#fff
+    style K fill:#06b6d4,color:#000
+```
+
+### How the Feedback Loop Works:
+
+1. **Scan** → Crawler discovers endpoints, scanner tests them
+2. **Result** → Finding or no finding
+3. **Reward** → RL agent receives positive/negative reward
+4. **Learn** → Agent updates its Q-table/policy network
+5. **Adapt** → Next scan uses improved strategy:
+   - Which plugins to try first
+   - Which payload encodings work best
+   - What parameter patterns are most vulnerable
+   - How to evade detected WAFs
+6. **Mutate** → Genetic algorithm evolves payloads based on what worked
+7. **Repeat** → Each scan makes the system smarter
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> ### 1. Target Authorization(no,it should scan directly..when given a authentication like paaword)
+> Should Navil require a signed authorization token/file before scanning, or is the scope YAML file sufficient?
+
+> [!IMPORTANT]
+> ### 2. GPU Training(keep it cpu only)
+> The RL training can run on CPU for small environments but benefits from GPU. Should we design for GPU support (CUDA/ROCm), or keep it CPU-only for portability?
+
+> [!IMPORTANT]
+> ### 3. Multi-Target Concurrency(multi target scanning will be perfect)
+> Should the first version support scanning multiple targets simultaneously, or sequential-only?
+
+> [!IMPORTANT]
+> ### 4. Third-Party Integrations(yes intergrate all necesary third party intergrations)
+> Should v1 include integrations with:
+> - Burp Suite (import/export findings)?
+> - Nuclei (template execution)?
+> - Metasploit (exploit verification)?
+> Or keep v1 self-contained?
+
+---
+
+## Execution Strategy
+
+### Phase 1: Foundation (Files 1-25)
+- Project scaffolding, configuration, data models
+- Core engine, scope enforcement, session management
+- Knowledge base (SQLite + models)
+- Structured logging, utilities
+
+### Phase 2: Scanning (Files 26-50)
+- Playwright crawler with async support
+- Spider with form/link discovery
+- All 12 vulnerability detection plugins
+- Passive + active scanning modes
+
+### Phase 3: Intelligence (Files 51-65)
+- RL environment and agent
+- Payload mutation engine
+- Exploit chain builder
+- Feedback loop integration
+
+### Phase 4: Interface (Files 66-85)
+- CLI with all commands
+- FastAPI server with all endpoints
+- Dashboard with real-time updates
+- Report generation
+
+### Phase 5: DevOps & Docs (Files 86-100+)
+- Docker configuration
+- CI/CD pipelines
+- Full documentation suite
+- Test suite
+
+---
+
+## Verification Plan
+
+### Automated Tests
+```bash
+# Unit tests
+pytest tests/ -v --cov=navil --cov-report=html
+
+# Type checking
+mypy navil/ --strict
+
+# Linting
+ruff check navil/
+
+# Security audit
+pip-audit
+```
+
+### Integration Testing
+- Scan OWASP WebGoat (local Docker) to validate vulnerability detection
+- Verify RL agent training converges on known vulnerable targets
+- Dashboard WebSocket real-time updates verification via browser test
+- CLI command execution and output format validation
+
+### Manual Verification
+go to this website name axene.io and check its ui and style then implement it in the navil gui..navil should also have cli version
+- Dashboard visual inspection via browser
+- CLI UX review
+- Report quality review (PDF/HTML output)
+- Rate-limiting behavior validation
+

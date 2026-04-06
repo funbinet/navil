@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Navil Scan Report</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #22d3ee;
+      --ok: #34d399;
+      --warn: #f59e0b;
+      --bad: #f43f5e;
+    }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .card { background: var(--panel); border: 1px solid #1f2937; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+    h1, h2 { margin: 0 0 1rem 0; }
+    .meta { color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #1f2937; text-align: left; padding: 0.7rem; }
+    th { color: var(--accent); }
+    .sev-CRITICAL, .sev-HIGH { color: var(--bad); font-weight: 700; }
+    .sev-MEDIUM { color: var(--warn); font-weight: 700; }
+    .sev-LOW, .sev-INFO { color: var(--ok); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Navil Security Report</h1>
+      <p class="meta">Scan ID: {{ scan.id }}</p>
+      <p class="meta">Status: {{ scan.status.value }}</p>
+      <p class="meta">Targets: {{ scan.targets | join(', ') }}</p>
+      <p class="meta">Total Findings: {{ scan.findings | length }}</p>
+    </div>
+
+    <div class="card">
+      <h2>Findings</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Plugin</th>
+            <th>Title</th>
+            <th>URL</th>
+            <th>Evidence</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for finding in scan.findings %}
+          <tr>
+            <td class="sev-{{ finding.severity.value }}">{{ finding.severity.value }}</td>
+            <td>{{ finding.plugin }}</td>
+            <td>{{ finding.title }}</td>
+            <td>{{ finding.url }}</td>
+            <td>{{ finding.evidence }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

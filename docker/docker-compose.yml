@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  navil-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: navil-api
+    ports:
+      - "8080:8080"
+    environment:
+      NAVIL_API_TOKENS: "local-dev-token"
+      NAVIL_DB_PATH: "/app/.data/navil.db"
+    volumes:
+      - navil_data:/app/.data
+      - navil_reports:/app/reports
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  navil-worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: navil-worker
+    command: ["python", "scripts/train.py", "--rounds", "20"]
+    environment:
+      NAVIL_DB_PATH: "/app/.data/navil.db"
+    volumes:
+      - navil_data:/app/.data
+    restart: on-failure
+
+  navil-dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: navil-dashboard
+    command: ["python", "-m", "http.server", "8090", "-d", "navil/dashboard"]
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+
+volumes:
+  navil_data:
+  navil_reports:

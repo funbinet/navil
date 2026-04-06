@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Navil Executive Summary</title>
+</head>
+<body>
+  <h1>Executive Summary</h1>
+  <p>Scan {{ scan.id }} completed with status <strong>{{ scan.status.value }}</strong>.</p>
+  <p>Targets assessed: {{ scan.targets | join(', ') }}.</p>
+  <p>Total findings: {{ scan.findings | length }}.</p>
+</body>
+</html>
