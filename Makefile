@@ -1,7 +1,7 @@
 PYTHON ?= python3
 PIP ?= $(PYTHON) -m pip
 
-.PHONY: install dev lint typecheck test audit run-api run-gui run-dashboard clean
+.PHONY: install dev lint typecheck test audit run-api run-cli clean
 
 install:
 	$(PIP) install -r requirements.txt
@@ -24,10 +24,7 @@ audit:
 run-api:
 	uvicorn navil.api.server:app --host 0.0.0.0 --port 8080 --reload
 
-run-gui:
-	$(PYTHON) -m navil
-
-run-dashboard:
+run-cli:
 	$(PYTHON) -m navil
 
 clean:

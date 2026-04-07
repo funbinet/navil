@@ -23,12 +23,11 @@ pip-audit
 
 ## Manual Verification Checklist
 
-1. Launch desktop GUI with `python3 -m navil`.
-2. Start a scan and verify live status/event updates.
-3. Confirm findings table and severity rendering.
-4. Export JSON/HTML/PDF report from GUI and inspect evidence.
-5. Validate out-of-scope target is blocked.
-6. Validate CLI mode still works with `navil scan ...`.
+1. Run `python3 -m navil --help` and confirm CLI command registration.
+2. Start a scan and verify status transitions until completion.
+3. Generate JSON/HTML/PDF reports from CLI and inspect evidence.
+4. Validate out-of-scope target is blocked.
+5. Validate API health and auth-protected endpoints.
 
 ## QA Report (2026-04-07)
 

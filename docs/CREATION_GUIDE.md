@@ -27,15 +27,12 @@ Edit `.navil-scope.yml` to define:
 
 ## 4. Run Modes
 
-### Desktop GUI (PyQt6)
-
-```bash
-python3 -m navil
-```
+For a full operational walkthrough, see `docs/RUN_USAGE.md`.
 
 ### CLI
 
 ```bash
+python3 -m navil --help
 navil scan https://target.example --scope .navil-scope.yml
 ```
 

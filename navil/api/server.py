@@ -46,7 +46,7 @@ async def index() -> dict[str, str]:
     return {
         "service": "navil-api",
         "health": "/health",
-        "gui": "launch with `python -m navil` or `navil-gui`",
+        "cli": "run with `python3 -m navil --help` or `navil --help`",
     }
 
 

@@ -10,7 +10,7 @@ Deliver a high-assurance, adaptive security assessment platform that reduces tim
 - Scope enforcement and session tracking
 - Recon + plugin scanner
 - Adaptive learning loop
-- Native desktop GUI (PyQt6) + CLI
+- CLI + API operation surface
 - Reporting exports
 - Test suite and CI/CD
 - Containerized deployment

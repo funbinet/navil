@@ -5,7 +5,6 @@
 | Layer | Technologies |
 |---|---|
 | Runtime | Python 3.11+, asyncio |
-| Desktop GUI | PyQt6 (native desktop client) |
 | API | FastAPI, Uvicorn, WebSocket |
 | CLI | Typer, Rich |
 | Storage | SQLite (aiosqlite), local semantic vector store |

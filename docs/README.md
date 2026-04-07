@@ -7,3 +7,4 @@
 - [Research Notes](./RESEARCH.md)
 - [Product Plan](./PRODUCT_PLAN.md)
 - [API Reference](./API.md)
+- [Run and Usage Guide](./RUN_USAGE.md)
