@@ -1,44 +1,108 @@
 # Implementation Guide
 
-## Repository Layout
+This guide documents code-level structure and implementation contracts for extending Navil safely.
 
-- `navil/core`: orchestration, session lifecycle, scope enforcement
-- `navil/recon`: crawling, form/link extraction, technology detection
-- `navil/scanner`: plugin framework and built-in detectors
-- `navil/brain`: adaptive policy updates and replay memory
-- `navil/mutator`: corpus, encoders, genetic evolution
-- `navil/chains`: graph-based chain modeling
-- `navil/knowledge`: models + SQLite persistence + vector similarity
-- `navil/api`: FastAPI routes, middleware, WebSocket feeds
-- `navil/cli`: Typer command interface
-- `navil/reporting`: templated export generation
+## 1. Repository Layout
 
-## Engine Lifecycle
+- `navil/core`: orchestration, state transitions, scan lifecycle
+- `navil/recon`: crawling, endpoint discovery, parsing logic
+- `navil/scanner`: plugin abstraction and detector execution
+- `navil/brain`: adaptive prioritization state and reward updates
+- `navil/mutator`: payload generation and mutation strategies
+- `navil/chains`: attack graph composition and relation logic
+- `navil/knowledge`: persistence models and SQLite store
+- `navil/api`: FastAPI routes, middleware, and websocket event APIs
+- `navil/cli`: Typer commands and interactive menu shell
+- `navil/reporting`: report templates and format exporters
+
+## 2. Engine Lifecycle Contract
 
 ```mermaid
 flowchart TD
-  A[Create Scan] --> B[Scope Validate]
-  B --> C[Crawl Targets]
-  C --> D[Scan Endpoints]
-  D --> E[Deduplicate Findings]
-  E --> F[Update Brain Rewards]
-  F --> G[Build Chains]
-  G --> H[Persist + Publish Events]
-  H --> I[Complete]
+  A[Create Scan] --> B[Scope Validation]
+  B --> C[Recon Crawl]
+  C --> D[Plugin Execution]
+  D --> E[Finding Normalization]
+  E --> F[Brain Reward Update]
+  F --> G[Chain Construction]
+  G --> H[Persistence + Events]
+  H --> I[Completed / Failed]
 ```
 
-## Plugin Contract
+Lifecycle invariants:
 
-Every plugin implements `VulnPlugin` with:
+- no scan proceeds before scope validation passes
+- findings are normalized before reporting/storage
+- errors are captured in scan state for operator visibility
 
-- `name`, `severity`, `category`
-- `scan(context)` returning list of validated findings
-- optional payload and verify helpers
+## 3. Plugin Contract
 
-## Third-Party Integration Model
+All scanner plugins should expose:
 
-- Burp export: normalized issue JSON
-- Nuclei adapter: optional CLI invocation wrapper
-- Metasploit adapter: non-interactive check wrapper
+- identity metadata (`name`, `severity`, `category`)
+- `scan(context)` implementation returning normalized findings
+- optional helper methods for payload generation and response verification
 
-Integrations are optional and degrade gracefully when binaries are unavailable.
+Plugin quality criteria:
+
+- deterministic output shape
+- low false-positive bias
+- no destructive default behavior
+- scope-respecting request generation
+
+## 4. Menu Shell and Job Model
+
+The interactive menu shell provides:
+
+- action help + proceed confirmations
+- foreground execution streams
+- background queue via in-process thread pool
+- persisted history and scan preset state
+
+Background job implementation tracks:
+
+- job id, status, timestamps
+- result payload or error text
+- inspect/cleanup ergonomics for operators
+
+## 5. Persistence Contract
+
+Core persistence entities:
+
+- scan metadata and status progression
+- findings and associated plugin/severity metadata
+- metrics and error summaries
+
+Recent scan retrieval supports report generation flows and menu-assisted selection.
+
+## 6. Reporting Contract
+
+Supported report formats:
+
+- JSON
+- HTML
+- Markdown
+- PDF
+
+Exporter goals:
+
+- consistent finding schema across formats
+- clear metadata for downstream ingestion
+- deterministic output paths when explicit output is provided
+
+## 7. Integration Adapters
+
+Optional adapters (Burp/Nuclei/Metasploit) must degrade gracefully when binaries are unavailable.
+
+Adapter design expectations:
+
+- explicit capability checks
+- structured errors instead of hard crashes
+- normalized adapter output into Navil finding/report model
+
+## 8. Engineering Guardrails
+
+- preserve scope-first enforcement semantics
+- maintain typed interfaces (mypy clean)
+- keep lint/test gates green before merge
+- avoid hidden side effects in plugin and engine codepaths

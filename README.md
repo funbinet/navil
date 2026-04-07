@@ -1,155 +1,196 @@
 # Navil
 
-Navil is an autonomous, scope-enforced application security assessment platform built for authorized testing workflows. It combines crawling, plugin-based vulnerability detection, adaptive strategy learning, exploit-chain modeling, API/CLI interfaces, and production-ready DevOps support.
+Navil is an autonomous, scope-enforced application security assessment platform for authorized testing programs. It combines asynchronous crawling, plugin-based vulnerability detection, adaptive scan strategy, attack-chain modeling, and multi-format reporting in a terminal-first operator experience.
 
-## Legal Notice
+## Legal and Safety Notice
 
-Navil must only be used on systems where you have explicit permission to test.
+Use Navil only against assets where you have explicit written authorization to test.
 
-## Core Capabilities
+## What Navil Delivers
 
-- Strict scope guardrails from `.navil-scope.yml`
-- Async crawler with form/link discovery and technology fingerprinting
-- 12 built-in vulnerability detectors
-- Adaptive plugin prioritization engine (epsilon-greedy RL-style policy)
-- Payload mutation pipeline with corpus + genetic evolution
-- Chain analysis for multi-finding attack paths
-- CLI-first operation plus FastAPI API and WebSocket live feed
-- Typer + Rich CLI for terminal-first operations
-- Structured reporting (JSON, HTML, Markdown, PDF)
-- CI/CD workflow, Docker runtime, automated tests
-- Optional integrations: Burp export, Nuclei execution, Metasploit check mode
+- Strong scope enforcement from .navil-scope.yml before any scan action
+- Async reconnaissance with link and form discovery
+- Plugin-based detection pipeline for web security findings
+- Adaptive brain that updates plugin priority from observed scan outcomes
+- Attack-chain graphing for multi-step exploit narratives
+- CLI-first operations with optional API + WebSocket surfaces
+- JSON, HTML, Markdown, and PDF reporting outputs
+- Local-first deployment with system Python and user-site install
 
-## Architecture Snapshot
+## Operating Model: No Virtual Environments
 
-```mermaid
-flowchart LR
-    CLI[CLI] --> Engine[Navil Engine]
-    API[API] --> Engine
-    Engine --> Scope[Scope Enforcer]
-    Engine --> Recon[Recon Crawler]
-    Engine --> Scan[Plugin Scanner]
-    Engine --> Brain[Adaptive Brain]
-    Engine --> Mutator[Payload Mutator]
-    Engine --> Chains[Chain Builder]
-    Engine --> KB[SQLite + Vector Store]
-    Engine --> Report[Report Generator]
-```
+This repository intentionally runs on real system Python.
 
-## Quick Start
+- No venv setup path is supported
+- Setup uses python3 and user-site package installation
+- If your OS enforces externally managed Python, setup retries with --break-system-packages
 
-1. Install dependencies:
+Install once from repository root:
 
 ```bash
 ./scripts/setup.sh
 ```
 
-The default setup installs packages for your local user with `python3`.
-For an isolated environment, run `./scripts/setup.sh --venv`.
-
-2. Create scope file:
-
-```bash
-cp .navil-scope.example.yml .navil-scope.yml
-```
-
-3. Validate CLI availability:
+Verify command availability:
 
 ```bash
 python3 -m navil --help
-```
-
-4. Start a scan with CLI:
-
-```bash
-navil scan https://example.com --scope .navil-scope.yml --plugins headers,cors,info_disclosure
-```
-
-5. Start API service (optional):
-
-```bash
-uvicorn navil.api.server:app --host 0.0.0.0 --port 8080 --reload
-```
-
-6. Generate report:
-
-```bash
-navil report --scan-id <SCAN_ID> --format html
-```
-
-## Run and Use Navil
-
-### Pick your interface
-
-- CLI flow:
-
-```bash
 navil --help
+navel --help
 ```
 
-- API service flow:
+If command shims are not found, add user scripts to PATH:
 
 ```bash
-uvicorn navil.api.server:app --host 0.0.0.0 --port 8080 --reload
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-### Typical usage workflow
+## Architecture Snapshot
 
-1. Validate your target scope:
+```mermaid
+flowchart LR
+    CLI[CLI / Menu Shell] --> Engine[Navil Engine]
+    API[FastAPI + WS] --> Engine
+    Engine --> Scope[Scope Enforcement]
+    Engine --> Recon[Recon Crawler]
+    Engine --> Scan[Plugin Scanner]
+    Engine --> Brain[Adaptive Brain]
+    Engine --> Chains[Attack Chain Builder]
+    Engine --> KB[SQLite Knowledge Store]
+    Engine --> Report[Report Generator]
+```
+
+## Quick Start
+
+1. Install dependencies and CLI entrypoints:
 
 ```bash
+./scripts/setup.sh
+```
+
+2. Create and validate scope file:
+
+```bash
+cp .navil-scope.example.yml .navil-scope.yml
 navil scope validate .navil-scope.yml
 ```
 
-2. Start a scan:
+3. Launch menu shell:
+
+```bash
+navil
+```
+
+4. Or run command mode directly:
 
 ```bash
 navil scan https://example.com --scope .navil-scope.yml --plugins headers,cors,info_disclosure
 ```
 
-3. Generate a report when complete:
+5. Generate report after completion:
 
 ```bash
 navil report --scan-id <SCAN_ID> --format html
 ```
 
-4. Optional adaptive updates:
+## Interfaces
+
+### Menu-Driven CLI
+
+Launch:
 
 ```bash
+navil
+```
+
+Equivalent explicit command:
+
+```bash
+navil start
+```
+
+Prompt style:
+
+```text
+navil [menu]> Option:
+navil [Web Scan]> Option:
+navil [System Audit]> Proceed [y/n]:
+```
+
+Menu shell characteristics:
+
+- Uniform boxed panel layout for readability
+- Action help panel before execution, with expected inputs and purpose
+- Foreground live step-stream panels for long-running tasks
+- Background job queue with inspect and cleanup flow
+- History and scan presets for repeat operations
+
+### Command-Driven CLI
+
+Core command surface:
+
+```bash
+navil --help
+navil scope validate .navil-scope.yml
+navil scan https://example.com --scope .navil-scope.yml
+navil report --scan-id <SCAN_ID> --format json
 navil brain status
 navil brain train --episodes 200
 ```
 
-For a full end-to-end operator walkthrough, see `docs/RUN_USAGE.md`.
+### API (Optional)
 
-## Testing and QA
+Start API server:
 
 ```bash
-pytest tests/ -v --cov=navil
-ruff check navil tests scripts
-mypy navil tests scripts
-pip-audit
+uvicorn navil.api.server:app --host 0.0.0.0 --port 8080 --reload
 ```
 
-### Current QA Snapshot (2026-04-07)
+Default development token:
 
-- Tests: `12 passed`
-- Coverage: `58%` total
-- Lint: `All checks passed`
-- Typing: `Success: no issues found in 100 source files`
-- Dependency audit: `No known vulnerabilities found`
-- Docker: build verified with `docker build -f docker/Dockerfile .`
+- local-dev-token
 
-Detailed QA process is documented in `docs/TESTING.md`.
+API reference:
+
+- docs/API.md
+
+## Standard Operator Workflow
+
+1. Confirm authorization boundaries and scope policy.
+2. Validate scope file.
+3. Execute web scan in menu or command mode.
+4. Inspect findings and chain potential.
+5. Generate final report in required format.
+6. Run policy training updates when needed.
+
+## Troubleshooting
+
+- Command not found:
+  - Re-run ./scripts/setup.sh
+  - Export PATH with ~/.local/bin
+- Scope path is directory error:
+  - Provide file path to .navil-scope.yml, not a directory
+- API auth failures:
+  - Send Authorization: Bearer local-dev-token (or configured token)
+
+## Quality and Verification
+
+Recommended validation sequence:
+
+```bash
+python3 -m ruff check .
+python3 -m mypy navil
+python3 -m pytest -q
+```
 
 ## Documentation Map
 
-- `docs/README.md`
-- `docs/CREATION_GUIDE.md`
-- `docs/ARCHITECTURE.md`
-- `docs/IMPLEMENTATION.md`
-- `docs/TESTING.md`
-- `docs/RESEARCH.md`
-- `docs/PRODUCT_PLAN.md`
-- `docs/API.md`
-- `docs/RUN_USAGE.md`
+- docs/README.md
+- docs/CREATION_GUIDE.md
+- docs/RUN_USAGE.md
+- docs/API.md
+- docs/ARCHITECTURE.md
+- docs/IMPLEMENTATION.md
+- docs/TESTING.md
+- docs/RESEARCH.md
+- docs/PRODUCT_PLAN.md

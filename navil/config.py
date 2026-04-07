@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field, HttpUrl, ValidationError
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from navil.constants import (
     DB_PATH,
@@ -55,14 +55,34 @@ class ScopeFile(BaseModel):
     safety: SafetyConfig = Field(default_factory=SafetyConfig)
 
 
-class AppConfig(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="NAVIL_", extra="ignore")
+def _env_int(name: str, default: int) -> int:
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return default
+    try:
+        return int(raw_value)
+    except ValueError:
+        return default
+
+
+class AppConfig(BaseModel):
 
     environment: str = "development"
     db_path: Path = DB_PATH
     scan_concurrency: int = Field(default=DEFAULT_SCAN_CONCURRENCY, ge=1, le=1000)
     jwt_secret: str = "change-me-in-production"
     api_tokens: str = "local-dev-token"
+
+    def __init__(self, **data: Any) -> None:
+        merged: dict[str, Any] = {
+            "environment": os.getenv("NAVIL_ENVIRONMENT", "development"),
+            "db_path": Path(os.getenv("NAVIL_DB_PATH", str(DB_PATH))),
+            "scan_concurrency": _env_int("NAVIL_SCAN_CONCURRENCY", DEFAULT_SCAN_CONCURRENCY),
+            "jwt_secret": os.getenv("NAVIL_JWT_SECRET", "change-me-in-production"),
+            "api_tokens": os.getenv("NAVIL_API_TOKENS", "local-dev-token"),
+        }
+        merged.update(data)
+        super().__init__(**merged)
 
     @property
     def token_set(self) -> set[str]:

@@ -1,49 +1,85 @@
 # Detection and Testing Guide
 
-## Automated Validation Commands
+This guide defines repeatable quality gates for Navil across linting, typing, unit tests, runtime smoke checks, and dependency hygiene.
+
+## 1. Automated Validation Commands
+
+Run from repository root:
 
 ```bash
-pytest tests/ -v --cov=navil --cov-report=term-missing
-ruff check navil tests scripts
-mypy navil tests scripts
-pip-audit
+python3 -m ruff check .
+python3 -m mypy navil
+python3 -m pytest -q
+python3 -m pip_audit
 ```
 
-## Coverage Intent
+## 2. Coverage Intent
 
-- Scope policy validation
-- Crawler parsing and endpoint extraction
-- Scanner plugin signal detection
-- Adaptive brain update behavior
-- Payload mutation correctness
-- Chain construction from findings
-- SQLite persistence integrity
-- API health and auth access
-- CLI invocation sanity
+Current test strategy prioritizes operational safety and deterministic core behavior.
 
-## Manual Verification Checklist
+Targeted areas:
 
-1. Run `python3 -m navil --help` and confirm CLI command registration.
-2. Start a scan and verify status transitions until completion.
-3. Generate JSON/HTML/PDF reports from CLI and inspect evidence.
-4. Validate out-of-scope target is blocked.
-5. Validate API health and auth-protected endpoints.
+- scope policy parsing and validation
+- recon extraction and crawl behavior
+- plugin execution and finding normalization
+- adaptive-brain updates
+- chain graph construction
+- persistence and retrieval flow
+- CLI/menu entrypoint behavior
 
-## QA Report (2026-04-07)
+## 3. Manual Operator Verification
+
+Perform after significant UI/engine changes:
+
+1. `python3 -m navil --help` renders expected commands
+2. `navil` enters menu shell with stable panel rendering
+3. selecting action shows help panel and proceed confirmation
+4. foreground scan stream displays status updates
+5. background jobs can be inspected and cleaned
+6. report generation succeeds for at least one completed scan
+
+## 4. API Verification Checklist
+
+1. start API server
+2. create scan with bearer token
+3. poll scan status
+4. fetch findings
+5. verify unauthorized request rejection without token
+
+## 5. Failure Injection Checklist
+
+- invalid scope path (directory instead of file)
+- out-of-scope target URLs
+- unsupported report format requests
+- missing optional external adapters
+
+Expected behavior:
+
+- explicit error message
+- no silent failure
+- no process crash for recoverable operator input errors
+
+## 6. Current QA Snapshot
 
 | Check | Status | Notes |
 |---|---|---|
-| Unit tests | Passed | `12 passed` |
-| Coverage | Passed | `58% total` (`--cov-fail-under=55` in CI) |
-| Linting | Passed | `ruff check navil tests scripts` |
-| Type checks | Passed | `Success: no issues found in 100 source files` |
-| Dependency audit | Passed | `No known vulnerabilities found` |
-| Docker build | Passed | Multi-stage image build completed successfully |
+| Lint | Passing | `python3 -m ruff check .` |
+| Typing | Passing | `python3 -m mypy navil` |
+| Tests | Passing | `python3 -m pytest -q` |
+| Dependency audit | Passing | `python3 -m pip_audit` |
 
-### Notes on Coverage
+## 7. CI Expectations
 
-The current coverage baseline focuses on core safety and scan logic paths. Remaining untested areas are primarily optional integrations and some orchestration branches. Next iteration should prioritize:
+PR readiness criteria:
 
-1. WebSocket event stream route coverage
-2. End-to-end engine orchestration scenarios
-3. Integration adapter mocks for Burp/Nuclei/Metasploit
+- lint clean
+- mypy clean
+- test suite green
+- docs updated for operator-facing behavior changes
+
+## 8. Next Coverage Priorities
+
+1. richer engine orchestration integration tests
+2. websocket event sequence coverage
+3. adapter mocks for third-party tool connectors
+4. report generation edge-case tests for malformed finding payloads

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import aiosqlite
 
@@ -181,3 +182,32 @@ class KnowledgeStore:
             created_at=datetime.fromisoformat(row["created_at"]),
             updated_at=datetime.fromisoformat(row["updated_at"]),
         )
+
+    async def list_scans(self, limit: int = 25) -> list[dict[str, Any]]:
+        async with aiosqlite.connect(self.db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute(
+                """
+                SELECT id, status, targets_json, metrics_json, errors_json, updated_at
+                FROM scans
+                ORDER BY updated_at DESC
+                LIMIT ?
+                """,
+                (limit,),
+            )
+            rows = await cursor.fetchall()
+
+        results: list[dict[str, Any]] = []
+        for row in rows:
+            metrics = json.loads(row["metrics_json"])
+            results.append(
+                {
+                    "id": row["id"],
+                    "status": row["status"],
+                    "targets": json.loads(row["targets_json"]),
+                    "metrics": metrics,
+                    "errors": json.loads(row["errors_json"]),
+                    "updated_at": row["updated_at"],
+                }
+            )
+        return results

@@ -9,7 +9,7 @@ from navil.knowledge.models import Finding
 
 class AttackGraph:
     def __init__(self) -> None:
-        self.graph = nx.DiGraph()
+        self.graph: nx.DiGraph = nx.DiGraph()
 
     def build(self, findings: list[Finding]) -> nx.DiGraph:
         self.graph.clear()
